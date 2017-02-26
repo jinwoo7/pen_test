@@ -1,13 +1,16 @@
 <?php
-require_once('../../../private/initialize.php');
+  require_once('../../../private/initialize.php');
+  if(!is_logged_in()) {
+    require_login();
+  }
 
-if(!isset($_GET['id'])) {
-  redirect_to('index.php');
-}
-$id = $_GET['id'];
-$users_result = find_user_by_id($id);
-// No loop, only one result
-$user = db_fetch_assoc($users_result);
+  if(!isset($_GET['id'])) {
+    redirect_to('index.php');
+  }
+  $id = $_GET['id'];
+  $users_result = find_user_by_id($id);
+  // No loop, only one result
+  $user = db_fetch_assoc($users_result);
 ?>
 
 <?php $page_title = 'Staff: User ' . $user['first_name'] . " " . $user['last_name']; ?>

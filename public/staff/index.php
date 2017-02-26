@@ -1,5 +1,11 @@
 <?php
-require_once('../../private/initialize.php');
+  require_once('../../private/initialize.php');
+  //echo $_SESSION['user_id'];
+  if(!is_logged_in()) {
+    //echo "<h1>NOT LOGGED IN, </h1>";
+    require_login();
+  }
+  //echo "<h1>LOGGED IN!</h1>";
 ?>
 
 <?php $page_title = 'Staff: Menu'; ?>

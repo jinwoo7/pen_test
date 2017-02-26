@@ -1,5 +1,8 @@
 <?php
 require_once('../../../private/initialize.php');
+if(!is_logged_in()) {
+    require_login();
+  }
 
 if(!isset($_GET['id'])) {
   redirect_to('../index.php');
@@ -13,15 +16,20 @@ $errors = array();
 
 if(is_post_request()) {
 
+  // check for valid token and for it's validitiy
+  if (!csrf_token_is_valid() || !csrf_token_is_recent()) {
+    $errors[] = "Error: invalid request detected";
+  }
+
   // Confirm that values are present before accessing them.
-  if(isset($_POST['name'])) { $territory['name'] = $_POST['name']; }
-  if(isset($_POST['position'])) { $territory['position'] = $_POST['position']; }
+  if(isset($_POST['name']))     { $territory['name']      = sql_clean (h($_POST['name'])); }
+  if(isset($_POST['position'])) { $territory['position']  = sql_clean (h($_POST['position'])); }
 
   $result = update_territory($territory);
   if($result === true) {
     redirect_to('show.php?id=' . $territory['id']);
   } else {
-    $errors = $result;
+    array_merge($errors, $result);
   }
 }
 ?>
@@ -41,6 +49,7 @@ if(is_post_request()) {
     Position:<br />
     <input type="text" name="position" value="<?php echo h($territory['position']); ?>" /><br />
     <br />
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Update"  />
   </form>
 

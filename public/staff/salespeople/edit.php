@@ -1,32 +1,40 @@
 <?php
-require_once('../../../private/initialize.php');
-
-if(!isset($_GET['id'])) {
-  redirect_to('index.php');
-}
-$salespeople_result = find_salesperson_by_id($_GET['id']);
-// No loop, only one result
-$salesperson = db_fetch_assoc($salespeople_result);
-
-// Set default values for all variables the page needs.
-$errors = array();
-
-if(is_post_request()) {
-
-  // Confirm that values are present before accessing them.
-  if(isset($_POST['first_name'])) { $salesperson['first_name'] = $_POST['first_name']; }
-  if(isset($_POST['last_name'])) { $salesperson['last_name'] = $_POST['last_name']; }
-  if(isset($_POST['phone'])) { $salesperson['phone'] = $_POST['phone']; }
-  if(isset($_POST['email'])) { $salesperson['email'] = $_POST['email']; }
-
-
-  $result = update_salesperson($salesperson);
-  if($result === true) {
-    redirect_to('show.php?id=' . $salesperson['id']);
-  } else {
-    $errors = $result;
+  require_once('../../../private/initialize.php');
+  if(!is_logged_in()) {
+    require_login();
   }
-}
+
+  if(!isset($_GET['id'])) {
+    redirect_to('index.php');
+  }
+  $salespeople_result = find_salesperson_by_id($_GET['id']);
+  // No loop, only one result
+  $salesperson = db_fetch_assoc($salespeople_result);
+
+  // Set default values for all variables the page needs.
+  $errors = array();
+
+  if(is_post_request()) {
+
+    // check for valid token and for it's validitiy
+    if (!csrf_token_is_valid() || !csrf_token_is_recent()) {
+      $errors[] = "Error: invalid request detected";
+    }
+
+    // Confirm that values are present before accessing them.
+    if(isset($_POST['first_name'])) { $salesperson['first_name'] = sql_clean (h($_POST['first_name'])); }
+    if(isset($_POST['last_name'])) { $salesperson['last_name'] = sql_clean (h($_POST['last_name'])); }
+    if(isset($_POST['phone'])) { $salesperson['phone'] = sql_clean (h($_POST['phone'])); }
+    if(isset($_POST['email'])) { $salesperson['email'] = sql_clean (h($_POST['email'])); }
+
+
+    $result = update_salesperson($salesperson);
+    if($result === true) {
+      redirect_to('show.php?id=' . $salesperson['id']);
+    } else {
+      array_merge($errors, $result);
+    }
+  }
 ?>
 <?php $page_title = 'Staff: Edit Salesperson ' . $salesperson['first_name'] . " " . $salesperson['last_name']; ?>
 <?php include(SHARED_PATH . '/staff_header.php'); ?>
@@ -48,6 +56,7 @@ if(is_post_request()) {
     Email:<br />
     <input type="text" name="email" value="<?php echo h($salesperson['email']); ?>" /><br />
     <br />
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Update"  />
   </form>
 

@@ -1,30 +1,37 @@
 <?php
-require_once('../../../private/initialize.php');
+  require_once('../../../private/initialize.php');
+  if(!is_logged_in()) {
+    require_login();
+  }
 
-// Set default values for all variables the page needs.
-$errors = array();
-$user = array(
-  'id' => null,
-  'first_name' => '',
-  'last_name' => '',
-  'username' => '',
-  'email' => ''
+  // Set default values for all variables the page needs.
+  $errors = array();
+  $user = array(
+    'id' => null,
+    'first_name' => '',
+    'last_name' => '',
+    'username' => '',
+    'email' => ''
 );
 
 if(is_post_request()) {
+  // check for valid token and for it's validitiy
+  if (!csrf_token_is_valid() || !csrf_token_is_recent()) {
+    $errors[] = "Error: invalid request detected";
+  }
 
   // Confirm that values are present before accessing them.
-  if(isset($_POST['first_name'])) { $user['first_name'] = $_POST['first_name']; }
-  if(isset($_POST['last_name'])) { $user['last_name'] = $_POST['last_name']; }
-  if(isset($_POST['username'])) { $user['username'] = $_POST['username']; }
-  if(isset($_POST['email'])) { $user['email'] = $_POST['email']; }
+  if(isset($_POST['first_name'])) { $user['first_name'] = sql_clean (h($_POST['first_name'] )); }
+  if(isset($_POST['last_name']))  { $user['last_name']  = sql_clean (h($_POST['last_name']  )); }
+  if(isset($_POST['username']))   { $user['username']   = sql_clean (h($_POST['username']   )); }
+  if(isset($_POST['email']))      { $user['email']      = sql_clean (h($_POST['email']      )); }
 
   $result = insert_user($user);
   if($result === true) {
     $new_id = db_insert_id($db);
     redirect_to('show.php?id=' . $new_id);
   } else {
-    $errors = $result;
+    array_merge($errors, $result);
   }
 }
 ?>
@@ -48,6 +55,7 @@ if(is_post_request()) {
     Email:<br />
     <input type="text" name="email" value="<?php echo h($user['email']); ?>" /><br />
     <br />
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Create"  />
   </form>
 

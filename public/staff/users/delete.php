@@ -1,5 +1,8 @@
 <?php
-require_once('../../../private/initialize.php');
+  require_once('../../../private/initialize.php');
+  if(!is_logged_in()) {
+    require_login();
+  }
 
 if(!isset($_GET['id'])) {
   redirect_to('index.php');
@@ -9,6 +12,13 @@ $users_result = find_user_by_id($_GET['id']);
 $user = db_fetch_assoc($users_result);
 
 if(is_post_request()) {
+
+  // check for valid token and for it's validitiy
+  if (!csrf_token_is_valid() || !csrf_token_is_recent()) {
+    echo "Error: invalid request detected";
+    exit;
+  }
+
   $result = delete_user($user);
   if($result === true) {
     redirect_to('index.php');
@@ -29,6 +39,7 @@ if(is_post_request()) {
     <p>
       &bull;&nbsp;<?php echo h($user['first_name']) . " " . h($user['last_name']); ?>
     </p>
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Delete"  />
   </form>
 

@@ -603,5 +603,10 @@
     }
   }
 
+  function sql_clean($string="") {
+    global $db;
+    return mysqli_real_escape_string ($db, $string);
+  }
+
 
 ?>

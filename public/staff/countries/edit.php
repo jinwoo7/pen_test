@@ -1,5 +1,8 @@
 <?php
-require_once('../../../private/initialize.php');
+  require_once('../../../private/initialize.php');
+  if(!is_logged_in()) {
+    require_login();
+  }
 
 if(!isset($_GET['id'])) {
   redirect_to('index.php');
@@ -13,15 +16,20 @@ $errors = array();
 
 if(is_post_request()) {
 
+  // check for valid token and for it's validitiy
+  if (!csrf_token_is_valid() || !csrf_token_is_recent()) {
+    $errors[] = "Error: invalid request detected";
+  }
+
   // Confirm that values are present before accessing them.
-  if(isset($_POST['name'])) { $country['name'] = $_POST['name']; }
-  if(isset($_POST['code'])) { $country['code'] = $_POST['code']; }
+  if(isset($_POST['name'])) { $country['name'] = sql_clean (h($_POST['name'])); }
+  if(isset($_POST['code'])) { $country['code'] = sql_clean (h($_POST['code'])); }
 
   $result = update_country($country);
   if($result === true) {
     redirect_to('show.php?id=' . $country['id']);
   } else {
-    $errors = $result;
+    array_merge($errors, $result);
   }
 }
 ?>
@@ -41,6 +49,7 @@ if(is_post_request()) {
     Code:<br />
     <input type="text" name="code" value="<?php echo h($country['code']); ?>" /><br />
     <br />
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Update"  />
   </form>
 

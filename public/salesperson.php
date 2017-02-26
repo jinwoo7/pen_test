@@ -1,6 +1,9 @@
 <?php
   require_once('../private/initialize.php');
-
+  if(!is_logged_in()) {
+    require_login();
+  }
+  
   if(!isset($_GET['id'])) {
     // Redirect if no ID provided
     redirect_to('territories.php');

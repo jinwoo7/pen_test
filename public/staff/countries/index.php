@@ -1,5 +1,8 @@
 <?php
 require_once('../../../private/initialize.php');
+if(!is_logged_in()) {
+    require_login();
+  }
 ?>
 
 <?php $page_title = 'Staff: Countries'; ?>

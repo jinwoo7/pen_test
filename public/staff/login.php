@@ -11,11 +11,24 @@ $errors = array();
 $username = '';
 $password = '';
 
-if(is_post_request()) {
+
+if (is_post_request()) {
+
+  // check for same domain
+  if (!request_is_same_domain()) {
+    $errors[] = "Error: request from different domain";
+  }
+
+  // check for valid token and for it's validitiy
+  if (!csrf_token_is_valid() || !csrf_token_is_recent()
+    || $_POST['username'] != sql_clean (h($_POST['username']))
+    || $_POST['password'] != sql_clean (h($_POST['password']))) {
+    $errors[] = "Error: invalid request detected";
+  }
 
   // Confirm that values are present before accessing them.
-  if(isset($_POST['username'])) { $username = $_POST['username']; }
-  if(isset($_POST['password'])) { $password = $_POST['password']; }
+  if(isset($_POST['username'])) { $username = sql_clean (h($_POST['username'])); }
+  if(isset($_POST['password'])) { $password = sql_clean (h($_POST['password'])); }
 
   // Validations
   if (is_blank($username)) {
@@ -39,11 +52,11 @@ if(is_post_request()) {
         redirect_to('index.php');
       } else {
         // Username found, but password does not match.
-        $errors[] = ""; // TODO write an error message
+        $errors[] = "Username found, Password does not match";
       }
     } else {
       // No username found
-      $errors[] = ""; // TODO write an error message
+      $errors[] = "Username not found";
     }
   }
 }
@@ -67,6 +80,7 @@ if(is_post_request()) {
     <input type="text" name="username" value="<?php echo $username; ?>" /><br />
     Password:<br />
     <input type="password" name="password" value="" /><br />
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Submit"  />
   </form>
 

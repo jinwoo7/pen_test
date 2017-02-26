@@ -1,6 +1,6 @@
 <?php
 require_once('../private/initialize.php');
-
+$msg = "";
 function create_fake_login() {
   // if user is not logged in, create a fake login for them.
   // important because students may not have enabled log in yet.
@@ -9,6 +9,7 @@ function create_fake_login() {
   }
   $_SESSION['last_login'] = time();
 }
+
 function delete_fake_login() {
   // Unset any login set by us
   if($_SESSION['user_id'] == 99999) {

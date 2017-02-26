@@ -1,5 +1,8 @@
 <?php
 require_once('../../../private/initialize.php');
+if(!is_logged_in()) {
+    require_login();
+  }
 
 if(!isset($_GET['id'])) {
   redirect_to('../index.php');
@@ -13,16 +16,28 @@ $errors = array();
 
 if(is_post_request()) {
 
+  // check for same domain
+  if(!request_is_same_domain()){
+    echo "Error: request from different domain";
+    exit;
+  }
+
+  // check for valid token and for it's validitiy
+  if(!csrf_token_is_valid() || !csrf_token_is_recent()) {
+    echo "Error: invalid request detected";
+    exit;
+  }
+
   // Confirm that values are present before accessing them.
-  if(isset($_POST['name'])) { $state['name'] = $_POST['name']; }
-  if(isset($_POST['code'])) { $state['code'] = $_POST['code']; }
-  if(isset($_POST['country_id'])) { $state['country_id'] = $_POST['country_id']; }
+  if(isset($_POST['name'])) { $state['name'] = sql_clean (h($_POST['name'])); }
+  if(isset($_POST['code'])) { $state['code'] = sql_clean (h($_POST['code'])); }
+  if(isset($_POST['country_id'])) { $state['country_id'] = sql_clean (h($_POST['country_id'])); }
 
   $result = update_state($state);
   if($result === true) {
     redirect_to('show.php?id=' . $state['id']);
   } else {
-    $errors = $result;
+    array_merge($errors, $result);
   }
 }
 ?>
@@ -44,6 +59,7 @@ if(is_post_request()) {
     Country ID:<br />
     <input type="text" name="country_id" value="<?php echo h($state['country_id']); ?>" /><br />
     <br />
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Update"  />
   </form>
 

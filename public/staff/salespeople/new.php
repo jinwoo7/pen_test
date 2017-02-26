@@ -1,5 +1,8 @@
 <?php
 require_once('../../../private/initialize.php');
+if(!is_logged_in()) {
+    require_login();
+  }
 
 // Set default values for all variables the page needs.
 $errors = array();
@@ -12,18 +15,23 @@ $salesperson = array(
 
 if(is_post_request()) {
 
+  // check for valid token and for it's validitiy
+  if (!csrf_token_is_valid() || !csrf_token_is_recent()) {
+    $errors[] = "Error: invalid request detected";
+  }
+
   // Confirm that values are present before accessing them.
-  if(isset($_POST['first_name'])) { $salesperson['first_name'] = $_POST['first_name']; }
-  if(isset($_POST['last_name'])) { $salesperson['last_name'] = $_POST['last_name']; }
-  if(isset($_POST['phone'])) { $salesperson['phone'] = $_POST['phone']; }
-  if(isset($_POST['email'])) { $salesperson['email'] = $_POST['email']; }
+  if(isset($_POST['first_name'])) { $salesperson['first_name'] = sql_clean (h($_POST['first_name'])); }
+  if(isset($_POST['last_name'])) { $salesperson['last_name'] = sql_clean (h($_POST['last_name'])); }
+  if(isset($_POST['phone'])) { $salesperson['phone'] = sql_clean (h($_POST['phone'])); }
+  if(isset($_POST['email'])) { $salesperson['email'] = sql_clean (h($_POST['email'])); }
 
   $result = insert_salesperson($salesperson);
   if($result === true) {
     $new_id = db_insert_id($db);
     redirect_to('show.php?id=' . $new_id);
   } else {
-    $errors = $result;
+    array_merge($errors, $result);
   }
 }
 ?>
@@ -47,6 +55,7 @@ if(is_post_request()) {
     Email:<br />
     <input type="text" name="email" value="<?php echo h($salesperson['email']); ?>" /><br />
     <br />
+    <?php echo csrf_token_tag(); ?>
     <input type="submit" name="submit" value="Create"  />
   </form>
 

@@ -1,6 +1,6 @@
 <?php
 require_once('../private/initialize.php');
-
+$msg = "";
 $string = "sqli' OR (1=1 AND SLEEP(5)=0) --'";
 
 $tested = isset($_GET['tested']) ? true : false;
